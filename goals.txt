@@ -1,0 +1,19 @@
+1. Ako sa zväčšoval herný trh s časom?
+
+2. Platforma - Ktorá platformá má najviac hier, ktorá platformá ma najvyššie predaje hier, ktoré regióny uprednostňujú aké platformy (Predpokladáme, že v NA bude najpopulárnejšia PS?)
+
+3. Žáner - ktorý žáner zahŕňa najviac hier, aký žáner je najpredávanješí a na akej platforme sa hrajú aké žánre hier (predpokladáme, že akčné budu najviac na PC, oproti tomu športové najviac na PS/XBOX)
+
+4. Predaje - ktoré hry sú najpredávanejšie (TOP 10) - Global, NA, JP, EU
+
+5. Critic - TOP 10 hier s najvyšším critic score
+
+6. User - TOP 10 hier s najvyšším user score
+
+7. Developer - aký developeri majú najpredávanejšei hry? + predaj hier od českých developerov
+
+8. Korelácia medzi zvyšujúcim sa počtom akčných hier na trhu (NA) a počtom vrážd v USA
+
+9. Na ktorých hrách progamery najviac zarobili
+
+10. Ako sa vyvýjali zárobky progamerov na hrách.
