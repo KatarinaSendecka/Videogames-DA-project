@@ -1,3 +1,4 @@
+from sqlalchemy import create_engine
 import pandas as pd
 
 CSVname = "Video_Games_Sales.csv"
@@ -36,5 +37,10 @@ sales = df.loc[:, ['ID','NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales']]
 sales.to_csv('GameSales.csv', index=False)
 critic = df.loc[:, ['ID','Critic_Score', 'Critic_Count', 'User_Score', 'User_Count']]
 critic.to_csv('gameCritic.csv', index=False)
+
 videoGames = df.loc[: ,['ID', 'Name', 'Platform', 'Year_of_Release', 'Genre', 'Publisher', 'Developer']]
 videoGames.to_csv('videoGames.csv', index=False)
+
+
+engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo=False)
+videoGames.to_sql("VideoGames", engine, index=False)
