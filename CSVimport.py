@@ -1,3 +1,4 @@
+from sqlalchemy import create_engine
 import pandas as pd
 import numpy as np
 
@@ -36,6 +37,7 @@ del df['Rating']
 
 sales = df.loc[:, ['ID','NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales']]
 critic = df.loc[:, ['ID','Critic_Score', 'Critic_Count', 'User_Score', 'User_Count']]
+
 critic.dropna(subset = ['Critic_Score', 'Critic_Count', 'User_Score', 'User_Count'], inplace=True)
 
 print("Critic: Percenta chybajucich hodnot v stlpcoch:")
@@ -65,3 +67,5 @@ sales.to_csv('GameSales.csv', index=False)
 critic.to_csv('gameCritic.csv', index=False)
 videoGames.to_csv('videoGames.csv', index=False)
 """
+engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo=False)
+videoGames.to_sql("VideoGames", engine, index=False)
