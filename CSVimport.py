@@ -32,10 +32,9 @@ df.drop(empty_cols,
 # smazani konkretniho sloupecku
 del df['Rating']
 
-print(df)
-
 sales = df.loc[:, ['ID','NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales']]
-print(sales)
 sales.to_csv('GameSales.csv', index=False)
 critic = df.loc[:, ['ID','Critic_Score', 'Critic_Count', 'User_Score', 'User_Count']]
 critic.to_csv('gameCritic.csv', index=False)
+videoGames = df.loc[: ,['ID', 'Name', 'Platform', 'Year_of_Release', 'Genre', 'Publisher', 'Developer']]
+videoGames.to_csv('videoGames.csv', index=False)
