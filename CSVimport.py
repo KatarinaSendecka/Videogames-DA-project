@@ -18,13 +18,20 @@ for bad_row in filecsv:
     bad_row = str(id) + ";" + bad_row
     id += 1
     filecsv2.write(bad_row)
-    
+   
 filecsv.close()
 filecsv2.close()
 
 df = pd.read_csv(CSVname_clean, sep=';',error_bad_lines=False)
 
-print(df)
+# smazani prazdnych sloupcu
+empty_cols = [col for col in df.columns if df[col].isnull().all()]
+df.drop(empty_cols,
+        axis=1,
+        inplace=True)
+# smazani konkretniho sloupecku
+del df['Rating']
 
+print(df)
 
 
