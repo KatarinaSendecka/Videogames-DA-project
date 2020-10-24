@@ -67,5 +67,5 @@ sales.to_csv('GameSales.csv', index=False)
 critic.to_csv('gameCritic.csv', index=False)
 videoGames.to_csv('videoGames.csv', index=False)
 """
-engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo=False)
+engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo=False) #prepoklada sa, ze databaza bezi, pre spustenie v terminali zavolat ./pgDocker.bat
 videoGames.to_sql("VideoGames", engine, index=False)
