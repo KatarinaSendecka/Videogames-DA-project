@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 CSVname = "Video_Games_Sales.csv"
 CSVname_clean = "Video_Games_Sales_clean.csv"
@@ -33,8 +34,23 @@ df.drop(empty_cols,
 del df['Rating']
 
 sales = df.loc[:, ['ID','NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales']]
-sales.to_csv('GameSales.csv', index=False)
 critic = df.loc[:, ['ID','Critic_Score', 'Critic_Count', 'User_Score', 'User_Count']]
-critic.to_csv('gameCritic.csv', index=False)
 videoGames = df.loc[: ,['ID', 'Name', 'Platform', 'Year_of_Release', 'Genre', 'Publisher', 'Developer']]
+
+
+for col in videoGames.columns:
+    pct_missing = np.mean(videoGames[col].isnull())
+    print('{} - {}%'.format(col, round(pct_missing*100)))
+
+med = videoGames['Year_of_Release'].median()
+print(med)
+videoGames['Year_of_Release'] = videoGames['Year_of_Release'].fillna(med)
+
+for col in videoGames.columns:
+    pct_missing = np.mean(videoGames[col].isnull())
+    print('{} - {}%'.format(col, round(pct_missing*100)))
+"""
+sales.to_csv('GameSales.csv', index=False)
+critic.to_csv('gameCritic.csv', index=False)
 videoGames.to_csv('videoGames.csv', index=False)
+"""
