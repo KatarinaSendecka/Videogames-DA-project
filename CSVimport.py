@@ -1,7 +1,10 @@
 import pandas as pd
 
-filecsv = open("Video_Games_Sales.csv",encoding='utf-8')
-filecsv2 = open("Video_Games_Sales_clean.csv","w",encoding='utf-8')
+CSVname = "Video_Games_Sales.csv"
+CSVname_clean = "Video_Games_Sales_clean.csv"
+
+filecsv = open(CSVname,encoding='utf-8')
+filecsv2 = open(CSVname_clean ,"w",encoding='utf-8')
 
 for bad_row in filecsv:
     
@@ -14,7 +17,7 @@ for bad_row in filecsv:
 filecsv.close()
 filecsv2.close()
 
-
+df = pd.read_csv(CSVname_clean, sep=';',error_bad_lines=False)
 
 
 
