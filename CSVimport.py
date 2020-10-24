@@ -56,6 +56,7 @@ print()
 med = videoGames['Year_of_Release'].median()
 print("Median rokov:", med)
 videoGames['Year_of_Release'] = videoGames['Year_of_Release'].fillna(med)
+videoGames['Year_of_Release'] = videoGames['Year_of_Release'].astype(np.int64)
 print()
 
 print("VideoGames: Percenta chybajucich hodnot v stlpcoch po vyplneni chybajucich rokov medianom:")
@@ -69,3 +70,5 @@ videoGames.to_csv('videoGames.csv', index=False)
 """
 engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo=False) #prepoklada sa, ze databaza bezi, pre spustenie v terminali zavolat ./pgDocker.bat
 videoGames.to_sql("VideoGames", engine, index=False)
+critic.to_sql("Critic", engine, index=False)
+sales.to_sql("Sales", engine, index=False)
