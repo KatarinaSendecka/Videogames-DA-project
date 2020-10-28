@@ -27,14 +27,6 @@ filecsv2.close()
 
 df = pd.read_csv(CSVname_clean, sep=';',error_bad_lines=False)
 
-# smazani prazdnych sloupcu
-empty_cols = [col for col in df.columns if df[col].isnull().all()]
-df.drop(empty_cols,
-        axis=1,
-        inplace=True)
-# smazani konkretniho sloupecku
-del df['Rating']
-
 sales = df.loc[:, ['ID','NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales']]
 critic = df.loc[:, ['ID','Critic_Score', 'Critic_Count', 'User_Score', 'User_Count']]
 
