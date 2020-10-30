@@ -55,13 +55,13 @@ sales.to_csv('GameSales.csv')
 critic.to_csv('gameCritic.csv')
 videoGames.to_csv('videoGames.csv')
 
-murdersDf = pd.read_csv(murders, sep=';',error_bad_lines=False)
+murdersDf = pd.read_csv(murders, sep=';',error_bad_lines=False, dtype=object)
 
 murdersNew = murdersDf.loc[:, ['Record ID','State', 'Year', 'Month', 'Perpetrator Age', 'Weapon']]
 murdersNew = murdersNew.set_index('Record ID')
-murdersNew['Perpetrator Age']=murdersNew['Perpetrator Age'].replace(' ',0)
-murdersNew['Perpetrator Age']=murdersNew['Perpetrator Age'].replace(0, np.nan)
-murdersNew['Perpetrator Age']=murdersNew['Perpetrator Age'].replace('0', np.nan)
+murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace(' ', np.nan)
+murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace(0, np.nan)
+murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace('0', np.nan)
 med2 = murdersNew['Perpetrator Age'].median()
 murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].fillna(med2)
 murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].astype(np.int64)
