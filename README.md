@@ -3,6 +3,7 @@
 Install the following python modules using `pip install`
 
 * pandas
+* seaborn
 * sqlalchemy
 * psycopg2
 
