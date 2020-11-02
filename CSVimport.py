@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 CSVname = "Video_Games_Sales.csv"
 CSVname_clean = "Video_Games_Sales_clean.csv"
 murders = "MurdersUSA.csv"
+esport = "GeneralEsportData.csv"
+esportNew = "GeneralEsportData_clean.csv"
 
 #removing separator from the names of games
 filecsv = open(CSVname,encoding='utf-8')
@@ -28,8 +30,48 @@ for bad_row in filecsv:
 filecsv.close()
 filecsv2.close()
 
+#add ID to Esport table
+fileEsport = open(esport,encoding="latin-1")
+fileEsport2 = open(esportNew ,"w",encoding="utf-8")
+
+id = 1
+header = "ID," + fileEsport.readline()
+fileEsport2.write(header)
+
+for row in fileEsport:
+    row = str(id) + "," + row
+    id += 1
+    fileEsport2.write(row)
+
+fileEsport.close()
+fileEsport2.close()
+
+#import Esport table
+esportDf = pd.read_csv("GeneralEsportData_clean.csv", encoding="utf-8")
+
+print(esportDf['ReleaseDate'].describe())
+print(esportDf['Game'].describe())
+print(esportDf['Genre'].describe())
+print(esportDf['TotalEarnings'].describe())
+print(esportDf['OnlineEarnings'].describe())
+print(esportDf['TotalTournaments'].describe())
+
+# create a new table with ID
+esportDfNew = esportDf.loc[:, ['ID','Game','ReleaseDate','Genre','TotalEarnings','OnlineEarnings','TotalPlayers','TotalTournaments']]
+esportDfNew = esportDfNew.set_index('ID')
+print(esportDfNew)
+
+#cleaning data
+esportDfNew.info()
+print(esportDfNew.isnull().sum())
+print(len(esportDfNew.Game.unique()))
+print(esportDfNew.Genre.unique())
+
 #import "Video_Games_Sales.csv"
 df = pd.read_csv(CSVname_clean, sep=';',error_bad_lines=False)
+
+# delete empty rows
+df.dropna(subset = ['Name'], inplace=True)
 
 #creating 3 tables from "Video_Games_Sales.csv" : sales, critic, videoGames
 sales = df.loc[:, ['ID','NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales']]
@@ -68,8 +110,7 @@ sales.dropna(subset = ['NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales'], inpl
 print(sales['Global_Sales'].idxmax())
 print(sales.loc[1])
 print(videoGames.loc[1])
-"""
-"""
+
 #cleaning of table critic
 critic.info()
 print(critic.isnull().sum())
@@ -84,8 +125,7 @@ plt.show()
 
 sns.displot(critic, x="User_Score")
 plt.show()
-"""
-"""
+
 #cleaning of table videoGames
 videoGames.info()
 print(videoGames.isnull().sum())
@@ -101,6 +141,14 @@ videoGames['Year_of_Release'] = videoGames['Year_of_Release'].astype(np.int64)
 
 sns.displot(videoGames, x="Year_of_Release")
 plt.show()
+
+# replace empty rows with unknown
+videoGames['Platform'] = videoGames['Platform'].replace(np.nan, 'Unknown')
+videoGames['Genre'] = videoGames['Genre'].replace(np.nan, 'Unknown')
+videoGames['Publisher'] = videoGames['Publisher'].replace(np.nan, 'Unknown')
+
+videoGames.info()
+print(videoGames.isnull().sum())
 
 #import Murders dataset
 murdersDf = pd.read_csv(murders, sep=';',error_bad_lines=False, dtype=object)
@@ -131,19 +179,19 @@ print(murdersNew['Perpetrator Age'].idxmin())
 # murdersNew = murdersNew.drop(['19055'])
 #print(murdersNew['Perpetrator Age'].describe())
 
-
 #exporting the tables to csv
 sales.to_csv('GameSales.csv')
 critic.to_csv('gameCritic.csv')
 videoGames.to_csv('videoGames.csv')
 murdersNew.to_csv('Murders_clean.csv')
+esportDfNew.to_csv('esportDfNew.csv')
 
 #exporting the tables to sqol database
-
 """
 engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo=False) #prepoklada sa, ze databaza bezi, pre spustenie v terminali zavolat ./pgDocker.bat
 videoGames.to_sql("VideoGames", engine)
 critic.to_sql("Critic", engine)
 sales.to_sql("Sales", engine)
 murdersNew.to_sql("Murders", engine)
+esportDfNew.to_sql("Esport", engine)
 """
