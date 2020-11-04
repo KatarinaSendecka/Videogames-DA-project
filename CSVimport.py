@@ -10,7 +10,7 @@ murders = "MurdersUSA.csv"
 esport = "GeneralEsportData.csv"
 esportNew = "GeneralEsportData_clean.csv"
 
-#removing separator from the names of games
+# removing separator from the names of games
 filecsv = open(CSVname,encoding='utf-8')
 filecsv2 = open(CSVname_clean ,"w",encoding='utf-8')
 
@@ -30,7 +30,7 @@ for bad_row in filecsv:
 filecsv.close()
 filecsv2.close()
 
-#add ID to Esport table
+# add ID to Esport table
 fileEsport = open(esport,encoding="latin-1")
 fileEsport2 = open(esportNew ,"w",encoding="utf-8")
 
@@ -46,7 +46,7 @@ for row in fileEsport:
 fileEsport.close()
 fileEsport2.close()
 
-#import Esport table
+# import Esport table
 esportDf = pd.read_csv("GeneralEsportData_clean.csv", encoding="utf-8")
 
 print(esportDf['ReleaseDate'].describe())
@@ -59,21 +59,21 @@ print(esportDf['TotalTournaments'].describe())
 # create a new table with ID
 esportDfNew = esportDf.loc[:, ['ID','Game','ReleaseDate','Genre','TotalEarnings','OnlineEarnings','TotalPlayers','TotalTournaments']]
 esportDfNew = esportDfNew.set_index('ID')
+esportDfNew = esportDfNew.rename(columns={'Game': 'Name'})
 print(esportDfNew)
 
-#cleaning data
+# cleaning data
 esportDfNew.info()
 print(esportDfNew.isnull().sum())
-print(len(esportDfNew.Game.unique()))
-print(esportDfNew.Genre.unique())
+print(len(esportDfNew.Name.unique()))
 
-#import "Video_Games_Sales.csv"
+# import "Video_Games_Sales.csv"
 df = pd.read_csv(CSVname_clean, sep=';',error_bad_lines=False)
 
-# delete empty rows
+# delete empty names
 df.dropna(subset = ['Name'], inplace=True)
 
-#creating 3 tables from "Video_Games_Sales.csv" : sales, critic, videoGames
+# creating 3 tables from "Video_Games_Sales.csv" : sales, critic, videoGames
 sales = df.loc[:, ['ID','NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales']]
 sales = sales.set_index('ID')
 critic = df.loc[:, ['ID','Critic_Score', 'Critic_Count', 'User_Score', 'User_Count']]
@@ -81,7 +81,7 @@ critic = critic.set_index('ID')
 videoGames = df.loc[: ,['ID', 'Name', 'Platform', 'Year_of_Release', 'Genre', 'Publisher', 'Developer']]
 videoGames = videoGames.set_index('ID')
 
-#cleaning of table sales
+# cleaning of table sales
 sales.info()
 print(sales.isnull().sum())
 print(sales["Global_Sales"].describe())
@@ -111,7 +111,7 @@ print(sales['Global_Sales'].idxmax())
 print(sales.loc[1])
 print(videoGames.loc[1])
 
-#cleaning of table critic
+# cleaning of table critic
 critic.info()
 print(critic.isnull().sum())
 critic.dropna(subset = ['Critic_Score', 'Critic_Count', 'User_Score', 'User_Count'], inplace=True)
@@ -149,11 +149,18 @@ videoGames['Publisher'] = videoGames['Publisher'].replace(np.nan, 'Unknown')
 
 videoGames.info()
 print(videoGames.isnull().sum())
+print(videoGames[videoGames['Year_of_Release'] == 2020])
+videoGames = videoGames.drop(index=5937)
 
-#import Murders dataset
+# Merge of tables esportDfNew and videoGames on names of games
+mergeTable = pd.merge(videoGames, esportDfNew, on= 'Name', left_index=True)
+print(mergeTable)
+mergeTable.to_csv('mergeEsportVideogames.csv')
+"""
+# import Murders dataset
 murdersDf = pd.read_csv(murders, sep=';',error_bad_lines=False, dtype=object)
 
-#cleaning of table Murders
+# cleaning of table Murders
 murdersNew = murdersDf.loc[:, ['Record ID','State', 'Year', 'Month', 'Perpetrator Age', 'Weapon']]
 murdersNew = murdersNew.set_index('Record ID')
 
@@ -174,19 +181,17 @@ murdersNew['Year'] = murdersNew['Year'].astype(np.int64)
 #print(murdersNew.isna().sum())
 print(murdersNew['Year'].describe())
 print(murdersNew['Perpetrator Age'].describe())
-print(murdersNew['Perpetrator Age'].idxmin())
-# print(murdersNew.loc['19055'])
-# murdersNew = murdersNew.drop(['19055'])
-#print(murdersNew['Perpetrator Age'].describe())
-
-#exporting the tables to csv
+#print(murdersNew[murdersNew['Perpetrator Age'] == 1])
+#print(murdersNew[murdersNew['Perpetrator Age'] <= 10])
+"""
+# exporting the tables to csv
 sales.to_csv('GameSales.csv')
 critic.to_csv('gameCritic.csv')
 videoGames.to_csv('videoGames.csv')
 murdersNew.to_csv('Murders_clean.csv')
 esportDfNew.to_csv('esportDfNew.csv')
 
-#exporting the tables to sqol database
+# exporting the tables to sqol database
 """
 engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo=False) #prepoklada sa, ze databaza bezi, pre spustenie v terminali zavolat ./pgDocker.bat
 videoGames.to_sql("VideoGames", engine)
