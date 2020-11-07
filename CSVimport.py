@@ -147,7 +147,7 @@ videoGames['Platform'] = videoGames['Platform'].replace(np.nan, 'Unknown')
 videoGames['Genre'] = videoGames['Genre'].replace(np.nan, 'Unknown')
 videoGames['Publisher'] = videoGames['Publisher'].replace(np.nan, 'Unknown')
 
-print(videoGames[videoGames['Year_of_Release'] == 2020])
+#print(videoGames[videoGames['Year_of_Release'] == 2020])
 videoGames.at[5937,'Year_of_Release'] = 2009 #rewriting of bad year
 
 # import Murders dataset
@@ -193,3 +193,9 @@ sales.to_sql("Sales", engine)
 murdersNew.to_sql("Murders", engine)
 esportDfNew.to_sql("Esport", engine)
 """
+#Developer table
+czechDevelopers = videoGames[videoGames['Developer'] == 'Bohemia Interactive']
+czechDevelopers = czechDevelopers.append(videoGames[videoGames['Developer'] == '2K Czech'])
+czechDevelopers = czechDevelopers.append(videoGames[videoGames['Developer'] == 'Amanita Design'])
+czechDevelopers = czechDevelopers.append(videoGames[videoGames['Developer'] == 'SCS Software'])
+print(czechDevelopers)
