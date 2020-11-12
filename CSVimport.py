@@ -68,16 +68,19 @@ print(len(esportDfNew.Name.unique()))
 """
 # import "Video_Games_Sales.csv"
 df = pd.read_csv(CSVname_clean, sep=';',error_bad_lines=False)
+df = df.set_index('ID')
 
 # delete empty names
 df.dropna(subset = ['Name'], inplace=True)
+
+#dropping duplicates
+df = df.drop_duplicates()
+
 # creating 3 tables from "Video_Games_Sales.csv" : sales, critic, videoGames
-sales = df.loc[:, ['ID','NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales']]
-sales = sales.set_index('ID')
-critic = df.loc[:, ['ID','Critic_Score', 'Critic_Count', 'User_Score', 'User_Count']]
-critic = critic.set_index('ID')
-videoGames = df.loc[: ,['ID', 'Name', 'Platform', 'Year_of_Release', 'Genre', 'Publisher', 'Developer']]
-videoGames = videoGames.set_index('ID')
+sales = df.loc[:, ['NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales']]
+critic = df.loc[:, ['Critic_Score', 'Critic_Count', 'User_Score', 'User_Count']]
+videoGames = df.loc[: ,['Name', 'Platform', 'Year_of_Release', 'Genre', 'Publisher', 'Developer']]
+
 # cleaning of table sales
 """
 sales.info()
@@ -152,10 +155,9 @@ videoGames.at[5937,'Year_of_Release'] = 2009 #rewriting of bad year
 
 # import Murders dataset
 murdersDf = pd.read_csv(murders, sep=';',error_bad_lines=False, dtype=object)
-
+murdersDf = murdersDf.set_index('Record ID')
 # cleaning of table Murders
-murdersNew = murdersDf.loc[:, ['Record ID','State', 'Year', 'Month', 'Perpetrator Age', 'Weapon']]
-murdersNew = murdersNew.set_index('Record ID')
+murdersNew = murdersDf.loc[:, ['State', 'Year', 'Month', 'Perpetrator Age', 'Weapon']]
 """
 murdersNew.info()
 print(murdersNew.isnull().sum())
@@ -169,14 +171,14 @@ med2 = murdersNew['Perpetrator Age'].median()
 murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].fillna(med2)
 murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].astype(np.int64)
 murdersNew['Year'] = murdersNew['Year'].astype(np.int64)
+
 """
 print(murdersNew.isna().sum())
 print(murdersNew['Year'].describe())
 print(murdersNew['Perpetrator Age'].describe())
 print(murdersNew[murdersNew['Perpetrator Age'] == 1])
 """
-murdersNew = murdersNew[murdersNew['Perpetrator Age'] >= 6] #deleting of murders below age of 6
-
+murdersNew = murdersNew[murdersNew['Perpetrator Age'] >= 4] #deleting of murders below age of 4
 # exporting the tables to csv
 sales.to_csv('GameSales.csv')
 critic.to_csv('gameCritic.csv')
@@ -198,4 +200,4 @@ czechDevelopers = videoGames[videoGames['Developer'] == 'Bohemia Interactive']
 czechDevelopers = czechDevelopers.append(videoGames[videoGames['Developer'] == '2K Czech'])
 czechDevelopers = czechDevelopers.append(videoGames[videoGames['Developer'] == 'Amanita Design'])
 czechDevelopers = czechDevelopers.append(videoGames[videoGames['Developer'] == 'SCS Software'])
-print(czechDevelopers)
+#print(czechDevelopers)
