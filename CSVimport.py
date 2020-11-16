@@ -9,6 +9,8 @@ CSVname_clean = "Video_Games_Sales_clean.csv"
 murders = "MurdersUSA.csv"
 esport = "GeneralEsportData.csv"
 esportNew = "GeneralEsportData_clean.csv"
+HistoricalEsport = "HistoricalEsportData.csv"
+HistoricalEsportNew = "HistoricalEsportData_clean.csv"
 
 # removing separator from the names of games
 filecsv = open(CSVname,encoding='utf-8')
@@ -46,6 +48,22 @@ for row in fileEsport:
 fileEsport.close()
 fileEsport2.close()
 
+#add ID to historical esport table
+fileHistoricalEsport = open(HistoricalEsport,encoding="latin-1")
+fileHistoricalEsportNew = open(HistoricalEsportNew ,"w",encoding="utf-8")
+
+id = 1
+header = "ID," + fileHistoricalEsport.readline()
+fileHistoricalEsportNew.write(header)
+
+for row in fileHistoricalEsport:
+    row = str(id) + "," + row
+    id += 1
+    fileHistoricalEsportNew.write(row)
+
+fileHistoricalEsport.close()
+fileHistoricalEsportNew.close()
+
 # import Esport table
 esportDf = pd.read_csv("GeneralEsportData_clean.csv", encoding="utf-8")
 
@@ -66,6 +84,22 @@ esportDfNew.info()
 print(esportDfNew.isnull().sum())
 print(len(esportDfNew.Name.unique()))
 """
+# import HistoricalEsport table
+HistoricalEsportDf = pd.read_csv("HistoricalEsportData_clean.csv", encoding="utf-8")
+# cleaning of table Historical esport 
+'''
+print(HistoricalEsportDf['Game'].describe())
+print(HistoricalEsportDf['Earnings'].describe())
+print(HistoricalEsportDf['Players'].describe())
+print(HistoricalEsportDf['Tournaments'].describe())
+'''
+#change dtype of a column 'Date' in Historical esport table
+HistoricalEsportDf['Date'] = pd.to_datetime(HistoricalEsportDf['Date'])
+# print(HistoricalEsportDf['Date'].describe())
+
+HistoricalEsportDfNew = HistoricalEsportDf.loc[:, ['ID','Date','Game','Earnings','Players','Tournaments']]
+HistoricalEsportDfNew = HistoricalEsportDfNew.set_index('ID')
+
 # import "Video_Games_Sales.csv"
 df = pd.read_csv(CSVname_clean, sep=';',error_bad_lines=False)
 df = df.set_index('ID')
@@ -185,16 +219,18 @@ critic.to_csv('gameCritic.csv')
 videoGames.to_csv('videoGames.csv')
 murdersNew.to_csv('Murders_clean.csv')
 esportDfNew.to_csv('esportDfNew.csv')
+HistoricalEsportDfNew.to_csv('HistoricalEsportNew.csv')
 
 # exporting the tables to sql database
-"""
+'''
 engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo=False) #prepoklada sa, ze databaza bezi, pre spustenie v terminali zavolat ./pgDocker.bat
 videoGames.to_sql("VideoGames", engine)
 critic.to_sql("Critic", engine)
 sales.to_sql("Sales", engine)
 murdersNew.to_sql("Murders", engine)
 esportDfNew.to_sql("Esport", engine)
-"""
+HistoricalEsportDfNew.to_sql("HistoricalEsport", engine)
+'''
 #Developer table
 czechDevelopers = videoGames[videoGames['Developer'] == 'Bohemia Interactive']
 czechDevelopers = czechDevelopers.append(videoGames[videoGames['Developer'] == '2K Czech'])
