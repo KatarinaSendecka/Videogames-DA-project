@@ -231,9 +231,25 @@ murdersNew.to_sql("Murders", engine)
 esportDfNew.to_sql("Esport", engine)
 HistoricalEsportDfNew.to_sql("HistoricalEsport", engine)
 '''
-#Developer table
-czechDevelopers = videoGames[videoGames['Developer'] == 'Bohemia Interactive']
-czechDevelopers = czechDevelopers.append(videoGames[videoGames['Developer'] == '2K Czech'])
-czechDevelopers = czechDevelopers.append(videoGames[videoGames['Developer'] == 'Amanita Design'])
-czechDevelopers = czechDevelopers.append(videoGames[videoGames['Developer'] == 'SCS Software'])
-#print(czechDevelopers)
+#calculating of correlation coffeicient
+corCoefData = videoGames.merge(sales, on='ID')
+corCoefData1 = corCoefData.loc[:, ['Name', 'Year_of_Release']]
+corData1 = corCoefData1.groupby('Year_of_Release').count()
+
+corData2 = murdersNew.loc[:, ['Year', 'State']]
+corData2 = corData2.groupby('Year').count()
+
+
+corDataGames = corData1.merge(corData2, left_index=True, right_index=True)
+corDataGames = corDataGames.rename(columns={"Name": "Games", "State": "Murders"})
+corCoef1 = corDataGames.corr()
+print(corCoef1)
+
+corCoefData2 = corCoefData.loc[:, ['NA_Sales', 'Year_of_Release']]
+corData3 = corCoefData2.groupby('Year_of_Release').sum()
+
+corDataSales = corData3.merge(corData2, left_index=True, right_index=True)
+corDataSales = corDataSales.rename(columns={"State": "Murders"})
+
+corCoef2 = corDataSales.corr()
+print(corCoef2)
