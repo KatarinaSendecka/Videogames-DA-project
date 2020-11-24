@@ -243,8 +243,9 @@ corData2 = corData2.groupby('Year').count()
 corDataGames = corData1.merge(corData2, left_index=True, right_index=True)
 corDataGames = corDataGames.rename(columns={"Name": "Games", "State": "Murders"})
 corCoef1 = corDataGames.corr()
+print()
 print(corCoef1)
-
+print()
 corCoefData2 = corCoefData.loc[:, ['NA_Sales', 'Year_of_Release']]
 corData3 = corCoefData2.groupby('Year_of_Release').sum()
 
@@ -253,3 +254,4 @@ corDataSales = corDataSales.rename(columns={"State": "Murders"})
 
 corCoef2 = corDataSales.corr()
 print(corCoef2)
+print()
