@@ -61,12 +61,21 @@ def import_videogames(CSV_name_clean):
     critic = df.loc[:, ['Critic_Score', 'Critic_Count', 'User_Score', 'User_Count']]
     videoGames = df.loc[: ,['Name', 'Platform', 'Year_of_Release', 'Genre', 'Publisher', 'Developer']]
     return critic, sales, videoGames
-    
+
+def cleaning_videogames_table():
+    med = videoGames['Year_of_Release'].median()
+
+    videoGames['Year_of_Release'] = videoGames['Year_of_Release'].fillna(med)
+    videoGames['Year_of_Release'] = videoGames['Year_of_Release'].astype(np.int64)
+    videoGames['Platform'] = videoGames['Platform'].replace(np.nan, 'Unknown')
+    videoGames['Genre'] = videoGames['Genre'].replace(np.nan, 'Unknown')
+    videoGames['Publisher'] = videoGames['Publisher'].replace(np.nan, 'Unknown')
+    videoGames.at[5937,'Year_of_Release'] = 2009
+    videoGames.to_csv('videoGames.csv')
 
 def cleaning_sales_table():
     sales.dropna(subset = ['NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales'], inplace=True)
     sales.to_csv('GameSales.csv')
-
 
 def cleaning_critic_table():
     critic.dropna(subset = ['Critic_Score', 'Critic_Count', 'User_Score', 'User_Count'], inplace=True)
@@ -87,6 +96,21 @@ def import_historical_esport():
     HistoricalEsportDfNew['Date'] = pd.to_datetime(HistoricalEsportDfNew['Date'])
     HistoricalEsportDfNew.to_csv('HistoricalEsportNew.csv')
     return HistoricalEsportDfNew
+
+def import_murders():
+    murdersDf = pd.read_csv(murders, sep=';',error_bad_lines=False, dtype=object)
+    murdersDf = murdersDf.set_index('Record ID')
+    murdersNew = murdersDf.loc[:, ['State', 'Year', 'Month', 'Perpetrator Age', 'Weapon']]
+    murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace(' ', np.nan)
+    murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace(0, np.nan)
+    murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace('0', np.nan)
+    med2 = murdersNew['Perpetrator Age'].median()
+    murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].fillna(med2)
+    murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].astype(np.int64)
+    murdersNew['Year'] = murdersNew['Year'].astype(np.int64)
+    murdersNew = murdersNew[murdersNew['Perpetrator Age'] >= 4]
+    murdersNew.to_csv('Murders_clean.csv')
+    return murdersNew
 
 def correlation_coefficients_games_murders():
     corCoefData = videoGames.merge(sales, on='ID')
@@ -178,6 +202,7 @@ print(HistoricalEsportDf['Tournaments'].describe())
 """
 
 #cleaning of table videoGames
+cleaning_videogames_table()
 """
 videoGames.info()
 print(videoGames.isnull().sum())
@@ -186,51 +211,26 @@ print(videoGames.Genre.unique())
 print(videoGames.Publisher.unique())
 print(videoGames['Year_of_Release'].describe())
 """
-med = videoGames['Year_of_Release'].median()
-videoGames['Year_of_Release'] = videoGames['Year_of_Release'].fillna(med)
-videoGames['Year_of_Release'] = videoGames['Year_of_Release'].astype(np.int64)
+#histograms of videogames
 """
 sns.displot(videoGames, x="Year_of_Release")
 plt.show()
 """
-# replace empty rows with unknown
-videoGames['Platform'] = videoGames['Platform'].replace(np.nan, 'Unknown')
-videoGames['Genre'] = videoGames['Genre'].replace(np.nan, 'Unknown')
-videoGames['Publisher'] = videoGames['Publisher'].replace(np.nan, 'Unknown')
-
-#print(videoGames[videoGames['Year_of_Release'] == 2020])
-videoGames.at[5937,'Year_of_Release'] = 2009 #rewriting of bad year
 
 # import Murders dataset
-murdersDf = pd.read_csv(murders, sep=';',error_bad_lines=False, dtype=object)
-murdersDf = murdersDf.set_index('Record ID')
+murdersNew = import_murders()
+
 # cleaning of table Murders
-murdersNew = murdersDf.loc[:, ['State', 'Year', 'Month', 'Perpetrator Age', 'Weapon']]
 """
 murdersNew.info()
 print(murdersNew.isnull().sum())
 print(murdersNew.Weapon.unique())
 print(murdersNew.State.unique())
-"""
-murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace(' ', np.nan)
-murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace(0, np.nan)
-murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace('0', np.nan)
-med2 = murdersNew['Perpetrator Age'].median()
-murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].fillna(med2)
-murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].astype(np.int64)
-murdersNew['Year'] = murdersNew['Year'].astype(np.int64)
-
-"""
 print(murdersNew.isna().sum())
 print(murdersNew['Year'].describe())
 print(murdersNew['Perpetrator Age'].describe())
 print(murdersNew[murdersNew['Perpetrator Age'] == 1])
 """
-murdersNew = murdersNew[murdersNew['Perpetrator Age'] >= 4] #deleting of murders below age of 4
-# exporting the tables to csv
-videoGames.to_csv('videoGames.csv')
-murdersNew.to_csv('Murders_clean.csv')
-
 # exporting the tables to sql database
 '''
 engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo=False) #prepoklada sa, ze databaza bezi, pre spustenie v terminali zavolat ./pgDocker.bat
