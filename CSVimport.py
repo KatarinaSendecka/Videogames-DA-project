@@ -126,13 +126,13 @@ def print_sales(sales, print_enabled):
         print(sales["JP_Sales"].describe())
         
         sns.set_theme(style="whitegrid")
-        boxGS = sns.boxplot(x=sales["Global_Sales"])
+        sns.boxplot(x=sales["Global_Sales"])
         plt.show()
-        boxNAS = sns.boxplot(x=sales["NA_Sales"])
+        sns.boxplot(x=sales["NA_Sales"])
         plt.show()
-        boxEUS = sns.boxplot(x=sales["EU_Sales"])
+        sns.boxplot(x=sales["EU_Sales"])
         plt.show()
-        boxJPS = sns.boxplot(x=sales["JP_Sales"])
+        sns.boxplot(x=sales["JP_Sales"])
         plt.show()
 
 ######  CRITIC TABLE  ######
