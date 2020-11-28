@@ -11,6 +11,17 @@ esport = "GeneralEsportData.csv"
 esportNew = "GeneralEsportData_clean.csv"
 HistoricalEsport = "HistoricalEsportData.csv"
 HistoricalEsportNew = "HistoricalEsportData_clean.csv"
+InsertDb = False
+
+######  ENGINE DOCKER  ######
+
+engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo=False)
+
+def insert_db(df, table_name, engine):
+    if InsertDb:
+        df.to_sql(table_name, engine)
+
+######  ORIGINAL VIDEOGAMES DATASET  ######
 
 def videogames_clean_csv(CSV_name, CSV_name_clean):
     filecsv = open(CSV_name,encoding='utf-8')
@@ -32,6 +43,7 @@ def videogames_clean_csv(CSV_name, CSV_name_clean):
     filecsv.close()
     filecsv2.close()
 
+######  ADDING ID TO TABLE  ######
 
 def addID_to_table(file, file_new):
     file_table = open(file,encoding="latin-1")
@@ -49,197 +61,235 @@ def addID_to_table(file, file_new):
     file_table.close()
     file_table_new.close()
 
-def import_videogames(CSV_name_clean):
-    df = pd.read_csv(CSV_name_clean, sep=';',error_bad_lines=False)
-    df = df.set_index('ID')
-    # delete empty names
-    df.dropna(subset = ['Name'], inplace=True)
-    #dropping duplicates
-    df = df.drop_duplicates()
-    # creating 3 tables from "Video_Games_Sales.csv" : sales, critic, videoGames
+###### DIVIDING AND CLEANING VIDEOGAMES DATASET ######
+
+def transform_videogames_dataset(CSVname_clean):
+    df = pd.read_csv(CSVname_clean, sep=';',error_bad_lines=False)
+    clean_videogames_dataset(df)
     sales = df.loc[:, ['NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales']]
     critic = df.loc[:, ['Critic_Score', 'Critic_Count', 'User_Score', 'User_Count']]
     videoGames = df.loc[: ,['Name', 'Platform', 'Year_of_Release', 'Genre', 'Publisher', 'Developer']]
     return critic, sales, videoGames
 
-def cleaning_videogames_table():
-    med = videoGames['Year_of_Release'].median()
+def clean_videogames_dataset(df):
+    df = df.set_index('ID')
+    df.dropna(subset = ['Name'], inplace=True)
+    df = df.drop_duplicates()
 
+
+######  VIDEOGAMES TABLE  ######
+
+def process_videogames(engine, enable_print = False):
+    sanitize_videogames(videoGames)
+    videoGames.to_csv('videoGames.csv')
+    print_videogames(videoGames, enable_print)
+    insert_db(videoGames, "VideoGames", engine)
+    return videoGames
+
+def print_videogames(videoGames, print_enabled):
+    if print_enabled:
+        videoGames.info()
+        print(videoGames.isnull().sum())
+        print(videoGames.Platform.unique())
+        print(videoGames.Genre.unique())
+        print(videoGames.Publisher.unique())
+        print(videoGames['Year_of_Release'].describe())
+
+        sns.displot(videoGames, x="Year_of_Release")
+        plt.show()
+
+def sanitize_videogames(videoGames):
+    med = videoGames['Year_of_Release'].median()
     videoGames['Year_of_Release'] = videoGames['Year_of_Release'].fillna(med)
     videoGames['Year_of_Release'] = videoGames['Year_of_Release'].astype(np.int64)
     videoGames['Platform'] = videoGames['Platform'].replace(np.nan, 'Unknown')
     videoGames['Genre'] = videoGames['Genre'].replace(np.nan, 'Unknown')
     videoGames['Publisher'] = videoGames['Publisher'].replace(np.nan, 'Unknown')
     videoGames.at[5937,'Year_of_Release'] = 2009
-    videoGames.to_csv('videoGames.csv')
 
-def cleaning_sales_table():
+######  SALES TABLE ######
+
+def process_sales(engine, enable_print = False):
     sales.dropna(subset = ['NA_Sales', 'EU_Sales', 'JP_Sales', 'Global_Sales'], inplace=True)
     sales.to_csv('GameSales.csv')
+    print_sales(sales, enable_print)
+    insert_db(sales, "Sales", engine)
+    return sales
 
-def cleaning_critic_table():
+def print_sales(sales, print_enabled):
+    if print_enabled:
+        sales.info()
+        print(sales.isnull().sum())
+        print(sales["Global_Sales"].describe())
+        print(sales["NA_Sales"].describe())
+        print(sales["EU_Sales"].describe())
+        print(sales["JP_Sales"].describe())
+        
+        sns.set_theme(style="whitegrid")
+        sns.boxplot(x=sales["Global_Sales"])
+        plt.show()
+        sns.boxplot(x=sales["NA_Sales"])
+        plt.show()
+        sns.boxplot(x=sales["EU_Sales"])
+        plt.show()
+        sns.boxplot(x=sales["JP_Sales"])
+        plt.show()
+
+######  CRITIC TABLE  ######
+
+def process_critic(engine, enable_print = False):
     critic.dropna(subset = ['Critic_Score', 'Critic_Count', 'User_Score', 'User_Count'], inplace=True)
     critic.to_csv('gameCritic.csv')
+    print_critic(critic, enable_print)
+    insert_db(critic, "Critic", engine)
+    return critic
 
-def import_esport():
+def print_critic(critic, print_enabled):
+    if print_enabled:
+        critic.info()
+        print(critic.isnull().sum())
+        print(critic['Critic_Score'].describe())
+        print(critic['Critic_Count'].describe())
+        print(critic['User_Score'].describe())
+        print(critic['User_Count'].describe())
+
+        sns.displot(critic, x="Critic_Score")
+        plt.show()
+        sns.displot(critic, x="User_Score")
+        plt.show()
+
+######  ESPORT DATASET  ######
+
+def process_esport_csv(engine, enable_print = False):
     esportDf = pd.read_csv(esportNew, encoding="utf-8")
-    esportDfNew = esportDf.loc[:, ['ID','Game','ReleaseDate','Genre','TotalEarnings','OnlineEarnings','TotalPlayers','TotalTournaments']]
-    esportDfNew = esportDfNew.set_index('ID')
-    esportDfNew = esportDfNew.rename(columns={'Game': 'Name'}) 
-    esportDfNew.to_csv('esportDfNew.csv')
-    return esportDfNew
+    esportDf = sanitize_esport(esportDf)
+    esportDf.to_csv('esportDfNew.csv')
+    print_esport(esportDf, enable_print)
+    insert_db(esportDf, "Esport", engine)
+    return esportDf
 
-def import_historical_esport():
+def print_esport(esportDf, print_enabled):
+    if print_enabled:
+        print(esportDf['ReleaseDate'].describe())
+        print(esportDf['Game'].describe())
+        print(esportDf['Genre'].describe())
+        print(esportDf['TotalEarnings'].describe())
+        print(esportDf['OnlineEarnings'].describe())
+        print(esportDf['TotalTournaments'].describe())
+        esportDf.info()
+        print(esportDf.isnull().sum())
+        print(len(esportDf.Name.unique()))
+
+def sanitize_esport(esportDf):
+    esportDf = esportDf.loc[:, ['ID','Game','ReleaseDate','Genre','TotalEarnings','OnlineEarnings','TotalPlayers','TotalTournaments']]
+    esportDf = esportDf.set_index('ID')
+    esportDf = esportDf.rename(columns={'Game': 'Name'}) 
+    esportDf.to_csv('esportDfNew.csv')
+    return esportDf
+
+######  HISTORICAL ESPORT DATASET ######
+
+def process_historical_esport_csv(engine, enable_print = False):
     HistoricalEsportDf = pd.read_csv(HistoricalEsportNew, encoding="utf-8")
-    HistoricalEsportDfNew = HistoricalEsportDf.loc[:, ['ID','Date','Game','Earnings','Players','Tournaments']]
-    HistoricalEsportDfNew = HistoricalEsportDfNew.set_index('ID')
-    HistoricalEsportDfNew['Date'] = pd.to_datetime(HistoricalEsportDfNew['Date'])
-    HistoricalEsportDfNew.to_csv('HistoricalEsportNew.csv')
-    return HistoricalEsportDfNew
+    HistoricalEsportDf = sanitize_historical(HistoricalEsportDf)
+    HistoricalEsportDf.to_csv('HistoricalEsportNew.csv')
+    print_historical(HistoricalEsportDf, enable_print)
+    insert_db(HistoricalEsportDf, "HistoricalEsport", engine)
+    return HistoricalEsportDf
 
-def import_murders():
+def print_historical(HistoricalEsportDf, print_enabled):
+    if print_enabled:
+        print(HistoricalEsportDf['Game'].describe())
+        print(HistoricalEsportDf['Earnings'].describe())
+        print(HistoricalEsportDf['Players'].describe())
+        print(HistoricalEsportDf['Tournaments'].describe())
+
+def sanitize_historical(HistoricalEsportDf):
+    HistoricalEsportDf = HistoricalEsportDf.loc[:, ['ID','Date','Game','Earnings','Players','Tournaments']]
+    HistoricalEsportDf = HistoricalEsportDf.set_index('ID')
+    HistoricalEsportDf['Date'] = pd.to_datetime(HistoricalEsportDf['Date'])
+    return HistoricalEsportDf
+
+########  MURDERS DATASET  ######
+
+def process_murders_csv(engine, enable_print = False):
     murdersDf = pd.read_csv(murders, sep=';',error_bad_lines=False, dtype=object)
+    murdersDf = sanitize_murders(murdersDf)
+    murdersDf.to_csv('Murders_clean.csv')
+    print_murders(murdersDf, enable_print)
+    insert_db(murdersDf, "Murders", engine)
+    return murdersDf
+
+def print_murders(murdersDf, print_enabled):
+    if print_enabled:
+        murdersDf.info()
+        print(murdersDf.isnull().sum())
+        print(murdersDf.Weapon.unique())
+        print(murdersDf.State.unique())
+        print(murdersDf.isna().sum())
+        print(murdersDf['Year'].describe())
+        print(murdersDf['Perpetrator Age'].describe())
+        print(murdersDf[murdersDf['Perpetrator Age'] == 1])
+
+def sanitize_murders(murdersDf):
     murdersDf = murdersDf.set_index('Record ID')
-    murdersNew = murdersDf.loc[:, ['State', 'Year', 'Month', 'Perpetrator Age', 'Weapon']]
-    murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace(' ', np.nan)
-    murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace(0, np.nan)
-    murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].replace('0', np.nan)
-    med2 = murdersNew['Perpetrator Age'].median()
-    murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].fillna(med2)
-    murdersNew['Perpetrator Age'] = murdersNew['Perpetrator Age'].astype(np.int64)
-    murdersNew['Year'] = murdersNew['Year'].astype(np.int64)
-    murdersNew = murdersNew[murdersNew['Perpetrator Age'] >= 4]
-    murdersNew.to_csv('Murders_clean.csv')
-    return murdersNew
+    murdersDf = murdersDf.loc[:, ['State', 'Year', 'Month', 'Perpetrator Age', 'Weapon']]
+    murdersDf['Perpetrator Age'] = murdersDf['Perpetrator Age'].replace(' ', np.nan)
+    murdersDf['Perpetrator Age'] = murdersDf['Perpetrator Age'].replace(0, np.nan)
+    murdersDf['Perpetrator Age'] = murdersDf['Perpetrator Age'].replace('0', np.nan)
+    med2 = murdersDf['Perpetrator Age'].median()
+    murdersDf['Perpetrator Age'] = murdersDf['Perpetrator Age'].fillna(med2)
+    murdersDf['Perpetrator Age'] = murdersDf['Perpetrator Age'].astype(np.int64)
+    murdersDf['Year'] = murdersDf['Year'].astype(np.int64)
+    murdersDf = murdersDf[murdersDf['Perpetrator Age'] >= 4]
+    return murdersDf
 
-def correlation_coefficients_games_murders():
-    corCoefData = videoGames.merge(sales, on='ID')
-    corCoefData1 = corCoefData.loc[:, ['Name', 'Year_of_Release']]
-    corData1 = corCoefData1.groupby('Year_of_Release').count()
-    corData2 = murdersNew.loc[:, ['Year', 'State']]
-    corData2 = corData2.groupby('Year').count()
-    corDataGames = corData1.merge(corData2, left_index=True, right_index=True)
-    corDataGames = corDataGames.rename(columns={"Name": "Games", "State": "Murders"})
-    corCoef1 = corDataGames.corr()
-    corCoefData2 = corCoefData.loc[:, ['NA_Sales', 'Year_of_Release']]
-    corData3 = corCoefData2.groupby('Year_of_Release').sum()
-    corDataSales = corData3.merge(corData2, left_index=True, right_index=True)
-    corDataSales = corDataSales.rename(columns={"State": "Murders"})
-    corCoef2 = corDataSales.corr()
-    return print(f"\n{corCoef1}\n\n{corCoef2}\n")
+######  CORRELATION COEFFICIENT  ######
 
+def correlation_coefficients(enable_print = False):
+    dataMurders = murdersDf.loc[:, ['Year', 'State']]
+    dataMurders = dataMurders.groupby('Year').count()
+    corCoef1 = corCoefMurdersGames(dataMurders, videoGames)
+    corCoef2 = corCoefMurdersSales(dataMurders, videoGames, sales)
+    print_coroef(corCoef1, corCoef2, enable_print)
 
-# removing separator from the names of games
+def print_coroef(corCoef1, corCoef2, print_enabled):
+    if print_enabled:
+        print(f"\n{corCoef1}\n\n{corCoef2}\n")
+
+def corCoefMurdersGames(dataMurders, videoGames):
+    dataGames = videoGames.loc[:, ['Name', 'Year_of_Release']]
+    dataGames = dataGames.groupby('Year_of_Release').count()
+    corDataGamesMurders = dataGames.merge(dataMurders, left_index=True, right_index=True)
+    corDataGamesMurders = corDataGamesMurders.rename(columns={"Name": "Games", "State": "Murders"})
+    return corDataGamesMurders.corr()
+
+def corCoefMurdersSales(dataMurders, videoGames, sales):
+    dataSales = videoGames.merge(sales, left_index=True, right_index=True)
+    dataSales = dataSales.loc[:, ['NA_Sales', 'Year_of_Release']]
+    dataSales = dataSales.groupby('Year_of_Release').sum()
+    corDataSalesMurders = dataSales.merge(dataMurders, left_index=True, right_index=True)
+    corDataSalesMurders = corDataSalesMurders.rename(columns={"State": "Murders"})
+    return corDataSalesMurders.corr()
+
 videogames_clean_csv(CSVname, CSVname_clean)
-# creating od three separate tables
-critic, sales, videoGames = import_videogames(CSVname_clean)
 
-# cleaning of table sales
-"""
-sales.info()
-print(sales.isnull().sum())
-print(sales["Global_Sales"].describe())
-print(sales["NA_Sales"].describe())
-print(sales["EU_Sales"].describe())
-print(sales["JP_Sales"].describe())
- 
-#histograms
-sns.set_theme(style="whitegrid")
-boxGS = sns.boxplot(x=sales["Global_Sales"])
-plt.show()
-boxNAS = sns.boxplot(x=sales["NA_Sales"])
-plt.show()
-boxEUS = sns.boxplot(x=sales["EU_Sales"])
-plt.show()
-boxJPS = sns.boxplot(x=sales["JP_Sales"])
-plt.show()
-"""
-cleaning_sales_table()
-# cleaning of table critic
-"""
-critic.info()
-print(critic.isnull().sum())
-print(critic['Critic_Score'].describe())
-print(critic['Critic_Count'].describe())
-print(critic['User_Score'].describe())
-print(critic['User_Count'].describe())
+critic, sales, videoGames = transform_videogames_dataset(CSVname_clean)
 
-#histohrams
-sns.displot(critic, x="Critic_Score")
-plt.show()
-sns.displot(critic, x="User_Score")
-plt.show()
-"""
-cleaning_critic_table()
+videoGames = process_videogames(engine, enable_print = False)
 
-# add ID to Esport table
+sales = process_sales(engine, enable_print = False)
+
+critic = process_critic(engine, enable_print = False)
+
 addID_to_table(esport, esportNew)
 
-#add ID to historical esport table
 addID_to_table(HistoricalEsport, HistoricalEsportNew)
 
-# import Esport table
-esportDfNew = import_esport()
-"""
-print(esportDf['ReleaseDate'].describe())
-print(esportDf['Game'].describe())
-print(esportDf['Genre'].describe())
-print(esportDf['TotalEarnings'].describe())
-print(esportDf['OnlineEarnings'].describe())
-print(esportDf['TotalTournaments'].describe())
+esportDF = process_esport_csv(engine, enable_print = False)
 
-esportDfNew.info()
-print(esportDfNew.isnull().sum())
-print(len(esportDfNew.Name.unique()))
-"""
-# import HistoricalEsport table
-HistoricalEsportDfNew = import_historical_esport()
-"""
-print(HistoricalEsportDf['Game'].describe())
-print(HistoricalEsportDf['Earnings'].describe())
-print(HistoricalEsportDf['Players'].describe())
-print(HistoricalEsportDf['Tournaments'].describe())
-"""
+HistoricalEsportDf = process_historical_esport_csv(engine, enable_print = False)
 
-#cleaning of table videoGames
-cleaning_videogames_table()
-"""
-videoGames.info()
-print(videoGames.isnull().sum())
-print(videoGames.Platform.unique())
-print(videoGames.Genre.unique())
-print(videoGames.Publisher.unique())
-print(videoGames['Year_of_Release'].describe())
-"""
-#histograms of videogames
-"""
-sns.displot(videoGames, x="Year_of_Release")
-plt.show()
-"""
+murdersDf = process_murders_csv(engine, enable_print = False)
 
-# import Murders dataset
-murdersNew = import_murders()
-
-# cleaning of table Murders
-"""
-murdersNew.info()
-print(murdersNew.isnull().sum())
-print(murdersNew.Weapon.unique())
-print(murdersNew.State.unique())
-print(murdersNew.isna().sum())
-print(murdersNew['Year'].describe())
-print(murdersNew['Perpetrator Age'].describe())
-print(murdersNew[murdersNew['Perpetrator Age'] == 1])
-"""
-# exporting the tables to sql database
-'''
-engine = create_engine('postgresql://postgres:postgres@localhost:5432/postgres', echo=False) #prepoklada sa, ze databaza bezi, pre spustenie v terminali zavolat ./pgDocker.bat
-videoGames.to_sql("VideoGames", engine)
-critic.to_sql("Critic", engine)
-sales.to_sql("Sales", engine)
-murdersNew.to_sql("Murders", engine)
-esportDfNew.to_sql("Esport", engine)
-HistoricalEsportDfNew.to_sql("HistoricalEsport", engine)
-'''
-#calculating of correlation coffeicient
-correlation_coefficients_games_murders()
+correlation_coefficients(enable_print = True)
